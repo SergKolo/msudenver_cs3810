@@ -17,11 +17,11 @@ def main():
     if len(list(conf_files)) == 0:
         first_run(config_dir)
     
-    query = """SELECT * 
-               FROM files 
-               WHERE gio_filetype LIKE 'application/%'"""
-    result = simple_query(config_dir,query)
-    print(result)
+#    query = """SELECT * 
+#               FROM files 
+#               WHERE gio_filetype LIKE 'application/%'"""
+#    result = simple_query(config_dir,query)
+#    print(result)
 
 if __name__ == '__main__':
     main()
