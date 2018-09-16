@@ -9,6 +9,7 @@ setup(
     author_email='1047481448@qq.com',
     url='https://github.com/SergKolo/msudenver_cs3810',
     packages=['metadb'],
+    install_requires=['audioread','PIL']
     classifiers=[
         'Environment :: X11 Applications :: GTK',
         'Intended Audience :: End Users/Desktop',
