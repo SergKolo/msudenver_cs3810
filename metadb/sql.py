@@ -20,7 +20,14 @@ def simple_query(config_dir,query):
     c.execute(query)
     return c.fetchall()
 
+def dump_all(config_dir):
+    query="""SELECT * FROM files"""
+    return simple_query(config_dir,query)
+
 def init_database(config_dir):
+
+    for f in os.listdir(config_dir):
+        os.unlink(os.path.join(config_dir,f))
 
     db_name = ''.join([os.environ['USER'],str(time())])  
     db_hash = md5()
