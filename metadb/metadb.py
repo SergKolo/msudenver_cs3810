@@ -24,6 +24,11 @@ def parse_cmd_args():
         "-d","--dump",
         action='store_true'
     )
+
+    argp.add_argument(
+        "-e","--exists",
+        action='store_true'
+    )
     argp.add_argument(
          "-i","--init",
          action='store_true'
@@ -37,6 +42,11 @@ def parse_cmd_args():
         "-m","--metadata",
         action='store',
         type=str
+    )
+
+    argp.add_argument(
+        "-u","--update",
+        action='store_true'
     )
     return argp.parse_args()
 
@@ -56,7 +66,15 @@ def main():
     if args.init:
         first_run(config_dir)
     if args.dump:
-        print(dump_all(config_dir))
+        for i in dump_all(config_dir):
+            fmtstr="Path:{0}\nSHA256:{1}\nType:{2}".format(*i)
+            if args.exists:
+                extrastr="".join(["Exists:", str(os.path.exists(i[0]))] )
+                fmtstr="\n".join([fmtstr,extrastr])
+            print(fmtstr,"\n")
+
+    if args.update:
+        updatedb()
     
 #    query = """SELECT * 
 #               FROM files 

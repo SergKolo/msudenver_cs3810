@@ -24,6 +24,28 @@ def dump_all(config_dir):
     query="""SELECT * FROM files"""
     return simple_query(config_dir,query)
 
+def updatedb():
+
+    # File path missing -> delete
+    # hash sum changed  -> update
+    # type mismatch -> update ?
+    # import new files ?
+
+    #    db_filter = filter(lambda x: x.endswith('.db'),os.listdir(config_dir))
+    #    db_fname = list(db_filter)[0]
+    #    db_path = os.path.join(config_dir,db_fname)
+    #
+    #    try:
+    #        conn = sqlite3.connect(db_path)
+    #    except sqlite.Error as sqlerr:
+    #        print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
+    #
+    #    c = conn.cursor()
+    #    for i in 
+    
+    pass
+        
+
 def init_database(config_dir):
 
     for f in os.listdir(config_dir):
