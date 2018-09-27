@@ -15,8 +15,7 @@ def parse_cmd_args():
     # TODO: https://stackoverflow.com/a/11155124/3701431
     # TODO: how do we handle --metadata arg ?
     desc = """Database for files in user's home directory
-              Authors: Sergiy Kolodyazhnyy
-                       Liu Tian
+              Authors: Sergiy Kolodyazhnyy, Liu Tian
            """
     argp = argparse.ArgumentParser(desc)
 
@@ -34,7 +33,7 @@ def parse_cmd_args():
          action='store_true'
     )
     argp.add_argument(
-        "-t","--type-query",
+        "-t","--type",
         action='store',
         type=str
     )
@@ -65,6 +64,7 @@ def main():
 
     if args.init:
         first_run(config_dir)
+
     if args.dump:
         for i in dump_all(config_dir):
             fmtstr="Path:{0}\nSHA256:{1}\nType:{2}".format(*i)
@@ -72,6 +72,18 @@ def main():
                 extrastr="".join(["Exists:", str(os.path.exists(i[0]))] )
                 fmtstr="\n".join([fmtstr,extrastr])
             print(fmtstr,"\n")
+
+    if args.type:
+        print('>>> ARGS.TYPE',args.type)
+        
+        @runsql
+        def get_types(type):
+            return  ( """ SELECT * 
+                         FROM files 
+                         WHERE gio_filetype = ? """, (type,))
+
+        for i in get_types(args.type):
+            print("Path:{0}\nSHA256:{1}\nType:{2}\n".format(*i))
 
     if args.update:
         updatedb()

@@ -4,6 +4,33 @@ from time import time
 from hashlib import md5
 from metadata import walk_home_tree
 
+# this may be better than simple_query()
+def runsql(func):
+    #print(">>>RUNSQL:",args)
+    def wrapper(*args,**kwargs):
+        print(args)
+        db_dir = os.path.join(os.environ['HOME'],'.config','metadb')
+        db_filter = filter(lambda x: x.endswith('.db'),
+                           os.listdir(db_dir))
+        db_fname = list(db_filter)[0]
+        db_path = os.path.join(db_dir,db_fname)
+
+        query = func(*args,**kwargs)
+        print('>>> QUERY:',query)
+
+        try:
+            conn = sqlite3.connect(db_path)
+        except sqlite.Error as sqlerr:
+            print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
+
+        c = conn.cursor()
+        c.execute(query[0],query[1])
+        return c.fetchall()
+    return wrapper
+    
+ 
+
+
 # we're repeating ourselves too much
 # Should config_dir be made global ?
 def simple_query(config_dir,query):
