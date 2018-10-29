@@ -79,8 +79,8 @@ def main():
         @runsql
         def get_types(type):
             return  ( """ SELECT * 
-                         FROM files 
-                         WHERE gio_filetype = ? """, (type,))
+                          FROM files 
+                          WHERE gio_filetype LIKE ? """, "/".join([type,"%"]))
 
         for i in get_types(args.type):
             print("Path:{0}\nSHA256:{1}\nType:{2}\n".format(*i))

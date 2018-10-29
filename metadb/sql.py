@@ -16,7 +16,7 @@ def runsql(func):
         db_path = os.path.join(db_dir,db_fname)
 
         query = func(*args,**kwargs)
-        print('>>> QUERY:',query)
+        print('>>> QUERY:',query[0],query[1])
 
         try:
             conn = sqlite3.connect(db_path)
@@ -24,7 +24,7 @@ def runsql(func):
             print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
 
         c = conn.cursor()
-        c.execute(query[0],query[1])
+        c.execute(str(query[0]),(query[1],))
         return c.fetchall()
     return wrapper
     
