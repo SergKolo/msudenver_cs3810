@@ -4,6 +4,13 @@ from gi.repository import Gio,GLib
 from PIL import Image
 from audioread import audio_open
 
+def get_exif():
+    """ TODO """
+    # python3 -c 'from PIL import Image,ExifTags;import sys;
+    # print( { ExifTags.TAGS[k]:v  for k,v in Image.open(sys.argv[1])._getexif().items()})'
+    pass
+
+
 def get_image_metadata(files):
     """generator for tuple image of resolution"""
     for i in files:

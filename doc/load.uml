@@ -1,0 +1,9 @@
+@startuml
+database metadb
+entity file
+entity file_subtype
+
+metadb.py -> metadb: query
+metadb --> file: insert
+file -> file_subtype: get_metadata()
+@enduml

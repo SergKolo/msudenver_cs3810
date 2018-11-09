@@ -1,0 +1,9 @@
+@startuml
+database metadb
+entity file
+entity file_subtype
+
+metadb.py -> metadb: query
+metadb --> file: delete type record if file_exists() returns false
+file -> file_subtype: trigger to delete subtype record
+@enduml

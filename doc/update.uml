@@ -1,0 +1,26 @@
+@startuml
+database metadb
+entity file
+entity changed_files
+entity new_files
+entity file_subtype
+
+' we might need CTE for temp tables
+' https://stackoverflow.com/a/26492971/3701431
+
+' metadb.py -> metadb: query to insert new files into new_files utility table
+
+metadb.py -> metadb: insert query on changed_files with subselect
+metadb -> file: subselect all files which return check_shasum() True
+file --> changed_files: insert changed files into utility table
+changed_files -> file: trigger update on those files that exist in changed_files table
+file->file_subtype: trigger update on changed subtype entity
+metadb -> changed_files: delete all from changed_files
+
+
+metadb.py ->metadb: query to insert new files into new_files table from dir tree traversal
+metadb -> file: trigger insert on file after insert into new new_files
+file -> file_subtype: trigger update on newly inserted file
+metadb -> new_files: delete all from new_files
+
+@enduml
