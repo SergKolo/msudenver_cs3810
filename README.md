@@ -48,7 +48,13 @@ The application should perform 4 core functionalities:
 - update the database - records of files which have been changed ( based on shasum ) should be updated and newly added files to the filesystem should added to the database
 - perform user-defined search queries based on minimal set of criteria
 
-Modeling via supertypes and subtype is used to model the relationship between files and their metadata. The major supertype in `file` table contains common information for all files, such as full filesystem path to file, access and modification time, inode number. Since metadata varies between different types of files ( obviously  metadata for image files is different from textfiles), subtype entity inherits pathname from the supertype. Metadata itself can be complex and varied within the subtype domain itself. Thus in order to reduce complexity, the metadata will be stored as json string. The advantage of such approach is that the command-line front end written in Python can convert json string to Python's native dictionary datastructure. This reduces complexity on the SQL side of the development.
+In order to speed up search queries, the database takes advantage of indexes. In order to maximize performance, indexes generally should be created on columns with high cardinality ( i.e. uniqueness of data). In case of the `file` table highest cardinality can be achieved either via shasum or path. While searching based on shasum is rare for average desktop users, path string would be more frequent and logical. Within each subtype highest cardinality is again achieved via path of the file. Indexes can help even in low cardinality cases, such as when we only have very few Image records with minor type `png`. For these reasons, the database will have the following indexes:
+
+- `file_path` index
+- `subtype_minor_type` index for each subtype
+- `metadata` index for each subtype
+
+Modeling via supertypes and subtype is used to model the relationship between files and their metadata. This is further described in  section 3.
 
 ### 2.2 Software Dependencies
 
@@ -62,6 +68,7 @@ Since the SQLite is intended for data aggregation and incapable of implementing 
 - `os` for directory tree traversal and basic OS interfacing
 - `audioread` for audiofile metadata discovery
 - `subprocess` to take advantage of external commands
+- `OrderedDict` to create json string with consistent order of items for performance benefits
 
 
 
@@ -106,16 +113,25 @@ Additionally, SQLite does not have stored procedures, which is a conscious choic
 
 The database models files and relation with their metadata via inheritance model. All objects that are discovered by the application via traversal of the  user's directories are going to be files, but each file has particular 'is a' relationship with major filetype.  Natural key to uniquely identify a file is pathname, which will be used as both primary key and foreign key to link entities.
 
+
+The major supertype in `file` table contains common information for all files, such as full filesystem path to file, access and modification time, inode number. Since metadata varies between different types of files ( obviously  metadata for image files is different from textfiles), subtype entity inherits pathname from the supertype. Metadata itself can be complex and varied within the subtype domain itself. Thus in order to reduce complexity, the metadata will be stored as json string. The advantage of such approach is that the command-line front end written in Python can convert json string to Python's native dictionary datastructure. This reduces complexity on the SQL side of the development.
+
 ### 3.1 Overview of Entities
+
+
+![entities](./doc/entities.png)
+
 ### 3.2 Required Tables
 
 For entity relationship:
+
 - File, supertypes
 - text
 - applications
 - image
 - video
 - audio
+- inode
 
 
 ## 4. Database-User Interfacing
@@ -123,16 +139,25 @@ For entity relationship:
 The application is written as command-line application, which implies the application can interface with the user via text. The user can control which database queries are issued via command-line switches such as `-l`, `-u`, `-v`
 
 ### 4.1 Information Flow
-load functionality:
+
+`load` functionality:
 
 ![load](./doc/load.png)
 
-update functionality:
+`update` functionality:
 
 ![update](./doc/update.png)
 
-vacuum functionality:
+`vacuum` functionality:
 
 ![vacuum](./doc/vacuum.png)
 
 ### 4.2 Common User Queries
+
+Application is aimed at providing metadata searching capability. Core cases are 1) user providing specific file to retrieve from database and 2) user wants to find a particular type of file with specific metadata.
+
+## 5. Future Considerations and Extending
+
+- While the application's core aim is to provide metadata aggregation and lookup, the database is capable of additional functionality which may be potentially considered in future releases. As the demands of the users of the application grow, the users may require new sets of features. In particular, common complain of the desktop users within Linux ecosystem is the lack of tagging for files and searching based on the tags. The SQLite database is very much suitable for such purpose, and such feature may be added in future. Such feature would extend the database from supporting aggregation of metadata attached to the files themselves to providing capability of aggregating user-defined metadata.
+
+- Further performance improvements could be achieved via leveraging Python's regex searching capabilities in parsing the json metadata strings.
