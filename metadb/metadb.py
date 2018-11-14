@@ -2,14 +2,6 @@
 import os,argparse
 from sql import *
 
-def first_run(config_dir):
-    if not os.path.exists(config_dir):
-        # TODO: mode rwx for user, but no-one else
-        os.makedirs(config_dir)
-    # TODO: checking for existing db
-    init_database(config_dir)
-   
-
 def parse_cmd_args():
 
     # TODO: https://stackoverflow.com/a/11155124/3701431
@@ -53,14 +45,6 @@ def parse_cmd_args():
 def main():
 
     args = parse_cmd_args()
-
-    user_home = os.environ['HOME']
-    config_dir = os.path.join(user_home,'.config','metadb')
-    conf_files = filter(lambda x: x.endswith('.db'), os.listdir(config_dir) )
-
-    # TODO: should we run first_run() automatically or 
-    # follow user's arguments ?
-    #if len(list(conf_files)) == 0:
 
     if args.init:
         first_run(config_dir)
