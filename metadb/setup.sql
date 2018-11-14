@@ -2,77 +2,99 @@
 -- drop tables nor triggers. All custom functions should be defined before
 -- this script runs
 
+PRAGMA foreign_keys = ON;
+
+DROP TABLE IF EXISTS file;
 CREATE TABLE file (
-    f_path TEXT,
+    -- primary key already implies not null
+    path TEXT PRIMARY KEY,
     inode INT,
-    type_major TEXT,
-    type_minor TEXT,
+    size INT,
+    ftype_major TEXT,
     sha256sum TEXT,
-    mtime DATE,
     default_app TEXT
 );
-
-CREATE TABLE text(
-    inode INT,
-    char_count INT
+DROP TABLE IF EXISTS text;
+CREATE TABLE text (
+    path TEXT PRIMARY KEY,
+    fftype_minor TEXT,
+    metadata TEXT,
+    FOREIGN KEY (path) REFERENCES file(path)
 );
 
+DROP TABLE IF EXISTS application;
 CREATE TABLE application (
-    inode INT,
-    char_count INT
+    path TEXT PRIMARY KEY,
+    ftype_minor TEXT,
+    metadata TEXT,
+    FOREIGN KEY (path) REFERENCES file(path)
 );
-CREATE TABLE video  (
-    inode INT,
-    char_count INT
-);
+DROP TABLE IF EXISTS image;
 CREATE TABLE image (
-    inode INT,
-    char_count INT
+    path TEXT PRIMARY KEY,
+    ftype_minor TEXT,
+    metadata TEXT,
+    FOREIGN KEY (path) REFERENCES file(path)
 );
-CREATE TABLE inode  (
-    inode INT,
-    char_count INT
+DROP TABLE IF EXISTS video;
+CREATE TABLE video (
+    path TEXT PRIMARY KEY,
+    ftype_minor TEXT,
+    metadata TEXT,
+    FOREIGN KEY (path) REFERENCES file(path)
 );
-
+DROP TABLE IF EXISTS audio;
 CREATE TABLE audio (
-    inode INT,
-    char_count INT
+    path TEXT PRIMARY KEY,
+    ftype_minor TEXT,
+    metadata TEXT,
+    FOREIGN KEY (path) REFERENCES file(path)
+);
+DROP TABLE IF EXISTS inode;
+CREATE TABLE inode (
+    path TEXT PRIMARY KEY,
+    ftype_minor TEXT,
+    metadata TEXT,
+    FOREIGN KEY (path) REFERENCES file(path)
 );
 
+-- utility tables for updating database
+DROP TABLE IF EXISTS new_files;
 CREATE TABLE new_files AS SELECT * FROM file;
+DROP TABLE IF EXISTS changed_files;
 CREATE TABLE changed_files AS SELECT * FROM file;
 
 -- we need conditional trigger to toss each metadata into appropriate table
 -- for each table/subtype
 
 CREATE TRIGGER insert_text AFTER INSERT ON file
-WHEN new.type_major = 'text'
+WHEN new.ftype_major = 'text'
 BEGIN
-    INSERT INTO text VALUES (new.inode,count_chars(new.f_path));
-END
+    INSERT INTO text VALUES (new.path,get_minor(new.path),get_metadata(path,new.major));
+END;
 
 CREATE TRIGGER insert_audio AFTER INSERT ON file
-WHEN new.type_major = 'audio'
+WHEN new.ftype_major = 'audio'
 BEGIN
     INSERT INTO audio VALUES (new.inode,count_chars(new.f_path));
-END
+END;
 CREATE TRIGGER insert_video AFTER INSERT ON file
-WHEN new.type_major = 'video'
+WHEN new.ftype_major = 'video'
 BEGIN
     INSERT INTO video VALUES (new.inode,count_chars(new.f_path));
-END
+END;
 CREATE TRIGGER insert_image AFTER INSERT ON file
-WHEN new.type_major = 'image'
+WHEN new.ftype_major = 'image'
 BEGIN
     INSERT INTO image VALUES (new.inode,count_chars(new.f_path));
-END
+END;
 CREATE TRIGGER insert_app AFTER INSERT ON file
-WHEN new.type_major = 'application'
+WHEN new.ftype_major = 'application'
 BEGIN
     INSERT INTO application VALUES (new.inode,count_chars(new.f_path));
-END
+END;
 CREATE TRIGGER insert_inode AFTER INSERT ON file
-WHEN new.type_major = 'inode'
+WHEN new.ftype_major = 'inode'
 BEGIN
     INSERT INTO inode VALUES (new.inode,count_chars(new.f_path));
-END
+END;

@@ -11,34 +11,45 @@ def parse_cmd_args():
            """
     argp = argparse.ArgumentParser(desc)
 
-    argp.add_argument(
-        "-d","--dump",
-        action='store_true'
-    )
+#    argp.add_argument(
+#        "-d","--dump",
+#        action='store_true'
+#    )
+#
+#    argp.add_argument(
+#        "-e","--exists",
+#        action='store_true'
+#    )
+#    argp.add_argument(
+#         "-i","--init",
+#         action='store_true'
+#    )
+#    argp.add_argument(
+#        "-t","--type",
+#        action='store',
+#        type=str
+#    )
+#    argp.add_argument(
+#        "-m","--metadata",
+#        action='store',
+#        type=str
+#    )
 
     argp.add_argument(
-        "-e","--exists",
+        "-l","--load",
         action='store_true'
-    )
-    argp.add_argument(
-         "-i","--init",
-         action='store_true'
-    )
-    argp.add_argument(
-        "-t","--type",
-        action='store',
-        type=str
-    )
-    argp.add_argument(
-        "-m","--metadata",
-        action='store',
-        type=str
     )
 
     argp.add_argument(
         "-u","--update",
         action='store_true'
     )
+
+    argp.add_argument(
+        "-v","--vacuum",
+        action='store_true'
+    )
+
     return argp.parse_args()
 
 
@@ -46,31 +57,28 @@ def main():
 
     args = parse_cmd_args()
 
-    if args.init:
-        first_run(config_dir)
+    if args.load:
+        sql.load_db()
 
-    if args.dump:
-        for i in dump_all(config_dir):
-            fmtstr="Path:{0}\nSHA256:{1}\nType:{2}".format(*i)
-            if args.exists:
-                extrastr="".join(["Exists:", str(os.path.exists(i[0]))] )
-                fmtstr="\n".join([fmtstr,extrastr])
-            print(fmtstr,"\n")
-
-    if args.type:
-        print('>>> ARGS.TYPE',args.type)
-        
-        @runsql
-        def get_types(type):
-            return  ( """ SELECT * 
-                          FROM files 
-                          WHERE gio_filetype LIKE ? """, "/".join([type,"%"]))
-
-        for i in get_types(args.type):
-            print("Path:{0}\nSHA256:{1}\nType:{2}\n".format(*i))
+    if args.vacuum:
+       sql.vacuum()
 
     if args.update:
         updatedb()
+
+
+#    if args.type:
+#        print('>>> ARGS.TYPE',args.type)
+#        
+#        @runsql
+#        def get_types(type):
+#            return  ( """ SELECT * 
+#                          FROM files 
+#                          WHERE gio_filetype LIKE ? """, "/".join([type,"%"]))
+#
+#        for i in get_types(args.type):
+#            print("Path:{0}\nSHA256:{1}\nType:{2}\n".format(*i))
+
     
 #    query = """SELECT * 
 #               FROM files 

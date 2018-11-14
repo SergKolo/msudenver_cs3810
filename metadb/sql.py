@@ -51,7 +51,7 @@ def updatedb():
     pass
         
 
-def init_db():
+def load_db():
 
     # keep it simple, no need to worry about complex db file name
     db_dir = os.path.join( os.environ['HOME'],'.config','metadb' ) 
@@ -61,6 +61,7 @@ def init_db():
         conn = sqlite3.connect(db_path)
     except sqlite.Error as sqlerr:
         print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
+
     c = conn.cursor()
 
     # setup the database structure

@@ -4,27 +4,42 @@ from gi.repository import Gio,GLib
 from PIL import Image
 from audioread import audio_open
 
-def get_exif():
-    """ TODO """
-    # python3 -c 'from PIL import Image,ExifTags;import sys;
-    # print( { ExifTags.TAGS[k]:v  for k,v in Image.open(sys.argv[1])._getexif().items()})'
+
+def get_metadata(fpath,ftype):
+    """ Factory function for returning metadat about a file in json format.
+        This is intended to be called by triggers to insert data into database.
+        We should have gotten filetype when inserting into file table,hence two args
+    """
     pass
 
+    # https://lazka.github.io/pgi-docs/Gio-2.0/enums.html#Gio.FileType.MOUNTABLE
+    # f = Gio.File.new_for_path(f_path)
+    # info = f.query_info('standard::content-type',0,None)
+    # return info.get_attribute_as_string('standard::content-type')
+    # return f.query_file_type(0,None)
+    # return Gio.content_type_guess(f,None)
 
-def get_image_metadata(files):
-    """generator for tuple image of resolution"""
-    for i in files:
-        with Image.open(i) as img:
-             yield img.size
-
-def get_audio_metadata(files):
-    """generator for audio channel,sample rate, and duration in sec"""
-    for i in files:
-        try:
-            with audio_open(i) as fd:
-                 yield (fd.channels,fd.samplerate,fd.duration)
-        except audioread.NoBackendError as aderr:
-               print(aderr.__cause__,aderr.__context__,aderr.__dict__)
+#	def get_exif():
+#	    """ TODO """
+#	    # python3 -c 'from PIL import Image,ExifTags;import sys;
+#	    # print( { ExifTags.TAGS[k]:v  for k,v in Image.open(sys.argv[1])._getexif().items()})'
+#	    pass
+#
+#
+#	def get_image_metadata(files):
+#	    """generator for tuple image of resolution"""
+#	    for i in files:
+#		with Image.open(i) as img:
+#		     yield img.size
+#
+#	def get_audio_metadata(files):
+#	    """generator for audio channel,sample rate, and duration in sec"""
+#	    for i in files:
+#		try:
+#		    with audio_open(i) as fd:
+#			 yield (fd.channels,fd.samplerate,fd.duration)
+#		except audioread.NoBackendError as aderr:
+#		       print(aderr.__cause__,aderr.__context__,aderr.__dict__)
 
 
 def get_user_dirs(*args):
@@ -39,6 +54,7 @@ def walk_home_tree():
     """ Function traverses the directory tree
         and obtains filetype"""
 
+    # TODO: rewrite this !!!!!
     u_dirs = get_user_dirs()
     print(":::DEBUG:",u_dirs)   
     # For now we're only concerned with user's main directories 
@@ -65,13 +81,6 @@ def get_sha256sum(file_path,type):
               data_chunk = fd.read(1024)
     return str(sha256sum.hexdigest())
 
-def get_file_metadata(f_path):
-    # https://lazka.github.io/pgi-docs/Gio-2.0/enums.html#Gio.FileType.MOUNTABLE
-    f = Gio.File.new_for_path(f_path)
-    info = f.query_info('standard::content-type',0,None)
-    return info.get_attribute_as_string('standard::content-type')
-    #return f.query_file_type(0,None)
-    #return Gio.content_type_guess(f,None)
 
 if __name__ == '__main__':
     walk_tree()
