@@ -4,23 +4,19 @@ from time import time
 from hashlib import md5
 from metadata import walk_home_tree
 
+db_file = os.path.join( os.environ['HOME'],'.config','metadb.sqlite') 
+
 # this may be better than simple_query()
 def runsql(func):
-    #print(">>>RUNSQL:",args)
     def wrapper(*args,**kwargs):
-        print(args)
-        db_dir = os.path.join(os.environ['HOME'],'.config','metadb')
-        db_filter = filter(lambda x: x.endswith('.db'),
-                           os.listdir(db_dir))
-        db_fname = list(db_filter)[0]
-        db_path = os.path.join(db_dir,db_fname)
-
+        global db_file
         query = func(*args,**kwargs)
         print('>>> QUERY:',query[0],query[1])
 
         try:
-            conn = sqlite3.connect(db_path)
+            conn = sqlite3.connect(db_file)
         except sqlite.Error as sqlerr:
+            # TODO: write a custom function for this
             print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
 
         c = conn.cursor()
@@ -29,55 +25,64 @@ def runsql(func):
     return wrapper
     
 
+def init_db():
+    global db_file
+    # The database file doesn't exist.
+    # Create database file with all basic tables
+    with open(os.path.join(sys.path[0],'setup.sql')) as setup:
+        try:
+    	    conn = sqlite3.connect(db_file)
+        except sqlite3.Error as sqliterr:
+    	    print("SQLite error: {0}".format(sqliterr))
+    	    sys.exit(2)
+        curs = conn.cursor()
+        script = setup.read()
+        #print(script)
+        curs.executescript( script)
+        conn.commit()
+        conn.close()
+
 def updatedb():
 
     # File path missing -> delete
     # hash sum changed  -> update
     # type mismatch -> update ?
     # import new files ?
+ 
 
-    #    db_filter = filter(lambda x: x.endswith('.db'),os.listdir(config_dir))
-    #    db_fname = list(db_filter)[0]
-    #    db_path = os.path.join(config_dir,db_fname)
-    #
-    #    try:
-    #        conn = sqlite3.connect(db_path)
-    #    except sqlite.Error as sqlerr:
-    #        print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
-    #
-    #    c = conn.cursor()
-    #    for i in 
     
     pass
         
 
 def load_db():
 
-    # keep it simple, no need to worry about complex db file name
-    db_dir = os.path.join( os.environ['HOME'],'.config','metadb' ) 
-    db_path = os.path.join(db_dir,'metadb')
+    if not os.path.exists(db_file):
+        init_db()
 
-    try:
-        conn = sqlite3.connect(db_path)
-    except sqlite.Error as sqlerr:
-        print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
+#    # keep it simple, no need to worry about complex db file name
+#    db_dir = os.path.join( os.environ['HOME'],'.config','metadb' ) 
+#    db_path = os.path.join(db_dir,'metadb')
+#
+#    try:
+#        conn = sqlite3.connect(db_path)
+#    except sqlite3.Error as sqlerr:
+#        print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
+#
+#    c = conn.cursor()
+#
+#    # setup the database structure
+#    with open(  os.path.join( sys.path[0], 'setup.sql' ) ) as setupfile:
+#        script = setupfile.realines()    
+#        c.execute(query)
+#        conn.commit()
+#
+#    # insert data into files table here
+#
+#    conn.close()
 
-    c = conn.cursor()
 
-    # setup the database structure
-    with open(  os.path.join( sys.path[0], 'setup.sql' ) as setupfile:
-        script = setupfile.realines()    
-        c.execute(query)
-        conn.commit()
+    #for i in walk_home_tree():
 
-    # insert data into files table here
-
-    conn.close()
-
-
-#    # TODO: do we pass $HOME here or in metadata.py ?
-#    for i in walk_home_tree():
-#        #print("::DEBUG:",i) 
 #        query="""
 #            INSERT INTO files VALUES(:path,:hash,:gio_type)
 #        """

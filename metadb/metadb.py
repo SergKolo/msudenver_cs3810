@@ -58,13 +58,13 @@ def main():
     args = parse_cmd_args()
 
     if args.load:
-        sql.load_db()
+        load_db()
 
     if args.vacuum:
-       sql.vacuum()
+       vacuum()
 
     if args.update:
-        updatedb()
+       updatedb()
 
 
 #    if args.type:

@@ -4,12 +4,13 @@ from gi.repository import Gio,GLib
 from PIL import Image
 from audioread import audio_open
 
-
 def get_metadata(fpath,ftype):
     """ Factory function for returning metadat about a file in json format.
         This is intended to be called by triggers to insert data into database.
         We should have gotten filetype when inserting into file table,hence two args
     """
+    #if ftype = '':
+    
     pass
 
     # https://lazka.github.io/pgi-docs/Gio-2.0/enums.html#Gio.FileType.MOUNTABLE
@@ -41,6 +42,7 @@ def get_metadata(fpath,ftype):
 #		except audioread.NoBackendError as aderr:
 #		       print(aderr.__cause__,aderr.__context__,aderr.__dict__)
 
+    
 
 def get_user_dirs(*args):
     user_dirs = []
@@ -65,10 +67,10 @@ def walk_home_tree():
                 # then full path. Doesn't concern with links
                 r_path = os.path.join(root,f)
                 f_path = os.path.abspath(r_path)
-                metadata = get_file_metadata(f_path)
+                #metadata = get_file_metadata(f_path)
                 # TODO: What to do with symlinks ???
-                sha256sum = get_sha256sum(f_path,metadata)
-                yield (r_path,sha256sum,metadata)
+                sha256sum = get_sha256sum(f_path,None)
+                yield (r_path,sha256sum)
 
 def get_sha256sum(file_path,type):
     if type == 'inode/symlink':
@@ -83,4 +85,5 @@ def get_sha256sum(file_path,type):
 
 
 if __name__ == '__main__':
-    walk_tree()
+    for i in walk_home_tree():
+        print(i)
