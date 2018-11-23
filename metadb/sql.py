@@ -4,25 +4,30 @@ from time import time
 from hashlib import md5
 from metadata import walk_home_tree
 
-db_file = os.path.join( os.environ['HOME'],'.config','metadb.sqlite') 
+db_file = os.path.join( os.environ['HOME'],
+                        '.config','metadb.sqlite') 
 
 # this may be better than simple_query()
 def runsql(func):
-    def wrapper(*args,**kwargs):
+    def wrapper(*w_args,**w_kwargs):
         global db_file
-        query = func(*args,**kwargs)
-        print('>>> QUERY:',query[0],query[1])
-
+        print("WRAPPER ARGS:",*w_args)
+        # string returned from original 'func' goes here
+        query = func(*w_args,**w_kwargs)
         try:
             conn = sqlite3.connect(db_file)
         except sqlite.Error as sqlerr:
             # TODO: write a custom function for this
-            print(sys.argv[0],"Could not open the database file:{0}".format(sqlerr))
+            print(sys.argv[0],
+              "Could not open the database file:{0}".format(sqlerr))
 
         c = conn.cursor()
-        c.execute(str(query[0]),(query[1],))
-        return c.fetchall()
+        print("QUERY:",query,type(query))
+        c.execute(query[0],*w_args)
+        c.fetchall()
+        return conn.commit()
     return wrapper
+
     
 
 def init_db():
@@ -56,8 +61,16 @@ def updatedb():
 
 def load_db():
 
+    @runsql
+    def insert_files(value):
+        return ( """ INSERT INTO file VALUES (?,?,?,?,?,?)""", value)
+
     if not os.path.exists(db_file):
         init_db()
+
+    for i in walk_home_tree():
+        insert_files(i)
+        
 
 #    # keep it simple, no need to worry about complex db file name
 #    db_dir = os.path.join( os.environ['HOME'],'.config','metadb' ) 
@@ -98,3 +111,7 @@ def load_db():
 #    # Here, there's just one tuple on list, one item in tuple
 #    print(c.fetchall()[0][0]," files imported")
 #    conn.close()
+
+
+
+# vim: syntax=python:

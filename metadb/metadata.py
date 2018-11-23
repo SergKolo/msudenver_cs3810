@@ -4,6 +4,24 @@ from gi.repository import Gio,GLib
 from PIL import Image
 from audioread import audio_open
 
+
+def get_content_type(fpath):
+    try:
+        f = Gio.File.new_for_path(fpath)
+        info = f.query_info('standard::content-type',0,None)
+        ftype = info.get_attribute_as_string('standard::content-type').split('/')
+        print(ftype)
+        try:
+            app = f.query_default_handler()
+            appid = app.get_id()
+        except Exception as e2:
+            appid = None
+        result = tuple(ftype+[appid])
+        return result
+    except Exception as e:
+        print("Exception encountered for file {0}:\n{1}",fpath,e)
+
+
 def get_metadata(fpath,ftype):
     """ Factory function for returning metadat about a file in json format.
         This is intended to be called by triggers to insert data into database.
@@ -55,10 +73,9 @@ def get_user_dirs(*args):
 def walk_home_tree():
     """ Function traverses the directory tree
         and obtains filetype"""
-
     # TODO: rewrite this !!!!!
     u_dirs = get_user_dirs()
-    print(":::DEBUG:",u_dirs)   
+    # print(":::DEBUG:",u_dirs)   
     # For now we're only concerned with user's main directories 
     for dirname in u_dirs:
         for root,dir_list,file_list in os.walk(dirname):
@@ -67,10 +84,14 @@ def walk_home_tree():
                 # then full path. Doesn't concern with links
                 r_path = os.path.join(root,f)
                 f_path = os.path.abspath(r_path)
-                #metadata = get_file_metadata(f_path)
+                f_stat = os.lstat(f_path)
+                content = get_content_type(f_path)
+                if content[0] == 'inode':
+                    continue
                 # TODO: What to do with symlinks ???
                 sha256sum = get_sha256sum(f_path,None)
-                yield (r_path,sha256sum)
+                yield (r_path,f_stat.st_ino,f_stat.st_size,
+                       content[0],sha256sum,content[2])
 
 def get_sha256sum(file_path,type):
     if type == 'inode/symlink':
