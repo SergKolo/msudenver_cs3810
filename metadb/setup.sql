@@ -11,13 +11,14 @@ CREATE TABLE file (
     inode INT,
     size INT,
     ftype_major TEXT,
+    ftype_minor TEXT,
     sha256sum TEXT,
     default_app TEXT
 );
 DROP TABLE IF EXISTS text;
 CREATE TABLE text (
     f_path TEXT PRIMARY KEY,
-    fftype_minor TEXT,
+    ftype_minor TEXT,
     metadata TEXT,
     FOREIGN KEY (f_path) REFERENCES file(f_path)
 );
@@ -45,7 +46,7 @@ CREATE TABLE video (
 );
 DROP TABLE IF EXISTS audio;
 CREATE TABLE audio (
-   f_path TEXT PRIMARY KEY,
+    f_path TEXT PRIMARY KEY,
     ftype_minor TEXT,
     metadata TEXT,
     FOREIGN KEY (f_path) REFERENCES file(f_path)
@@ -70,32 +71,34 @@ CREATE TABLE changed_files AS SELECT * FROM file;
 CREATE TRIGGER insert_text AFTER INSERT ON file
 WHEN new.ftype_major = 'text'
 BEGIN
-    INSERT INTO text VALUES (new.path,get_minor(new.path),get_metadata(f_path,new.major));
+    INSERT INTO text VALUES (new.f_path,new.ftype_minor,
+                             get_metadata(new.f_path,new.ftype_major,new.ftype_minor) );
 END;
 
-CREATE TRIGGER insert_audio AFTER INSERT ON file
-WHEN new.ftype_major = 'audio'
-BEGIN
-    INSERT INTO audio VALUES (new.inode,get_metadata(new.f_path));
-END;
-CREATE TRIGGER insert_video AFTER INSERT ON file
-WHEN new.ftype_major = 'video'
-BEGIN
-    INSERT INTO video VALUES (new.inode,get_metadata(new.f_path));
-END;
+--CREATE TRIGGER insert_audio AFTER INSERT ON file
+--WHEN new.ftype_major = 'audio'
+--BEGIN
+--    INSERT INTO audio VALUES (new.inode,get_metadata(new.f_path));
+--END;
+--CREATE TRIGGER insert_video AFTER INSERT ON file
+--WHEN new.ftype_major = 'video'
+--BEGIN
+--    INSERT INTO video VALUES (new.inode,get_metadata(new.f_path));
+--END;
 CREATE TRIGGER insert_image AFTER INSERT ON file
 WHEN new.ftype_major = 'image'
 BEGIN
-    INSERT INTO image VALUES (new.inode,get_metadata(new.f_path));
+    INSERT INTO image VALUES (new.f_path,new.ftype_minor,
+                             get_metadata(new.f_path,new.ftype_major,new.ftype_minor) );
 END;
-CREATE TRIGGER insert_app AFTER INSERT ON file
-WHEN new.ftype_major = 'application'
-BEGIN
-    INSERT INTO application VALUES (new.inode,get_metadata(new.f_path));
-END;
-/* CREATE TRIGGER insert_inode AFTER INSERT ON file
-WHEN new.ftype_major = 'inode'
-BEGIN
-    INSERT INTO inode VALUES (new.inode,count_chars(new.f_path));
-END;
-*/
+--CREATE TRIGGER insert_app AFTER INSERT ON file
+--WHEN new.ftype_major = 'application'
+--BEGIN
+--    INSERT INTO application VALUES (new.inode,get_metadata(new.f_path));
+--END;
+--/* CREATE TRIGGER insert_inode AFTER INSERT ON file
+--WHEN new.ftype_major = 'inode'
+--BEGIN
+--    INSERT INTO inode VALUES (new.inode,count_chars(new.f_path));
+--END;
+--*/

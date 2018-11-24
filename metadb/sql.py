@@ -2,7 +2,7 @@
 import sqlite3, os,sys
 from time import time
 from hashlib import md5
-from metadata import walk_home_tree
+from metadata import *
 
 db_file = os.path.join( os.environ['HOME'],
                         '.config','metadb.sqlite') 
@@ -11,7 +11,7 @@ db_file = os.path.join( os.environ['HOME'],
 def runsql(func):
     def wrapper(*w_args,**w_kwargs):
         global db_file
-        print("WRAPPER ARGS:",*w_args)
+        #print("WRAPPER ARGS:",*w_args)
         # string returned from original 'func' goes here
         query = func(*w_args,**w_kwargs)
         try:
@@ -22,7 +22,10 @@ def runsql(func):
               "Could not open the database file:{0}".format(sqlerr))
 
         c = conn.cursor()
-        print("QUERY:",query,type(query))
+        #print("QUERY:",query,type(query))
+        # For some reason because we need that function for triggers
+        # it has to be here on initialization
+        conn.create_function("get_metadata",3,get_metadata)
         c.execute(query[0],*w_args)
         c.fetchall()
         return conn.commit()
@@ -42,8 +45,7 @@ def init_db():
     	    sys.exit(2)
         curs = conn.cursor()
         script = setup.read()
-        #print(script)
-        curs.executescript( script)
+        curs.executescript(script)
         conn.commit()
         conn.close()
 
@@ -63,7 +65,7 @@ def load_db():
 
     @runsql
     def insert_files(value):
-        return ( """ INSERT INTO file VALUES (?,?,?,?,?,?)""", value)
+        return ( """ INSERT INTO file VALUES (?,?,?,?,?,?,?)""", value)
 
     if not os.path.exists(db_file):
         init_db()
