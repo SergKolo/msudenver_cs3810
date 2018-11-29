@@ -102,3 +102,16 @@ END;
 --    INSERT INTO inode VALUES (new.inode,count_chars(new.f_path));
 --END;
 --*/
+
+-- DELETION TRIGGERS 
+CREATE TRIGGER delete_text AFTER DELETE ON file
+WHEN OLD.ftype_major = 'text'
+BEGIN
+    DELETE FROM text WHERE OLD.f_path = text.f_path;
+END;
+
+CREATE TRIGGER delete_image AFTER DELETE ON file
+WHEN OLD.ftype_major = 'image'
+BEGIN
+    DELETE FROM image WHERE OLD.f_path = image.f_path;
+END;

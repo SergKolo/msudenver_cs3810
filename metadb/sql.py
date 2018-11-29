@@ -13,7 +13,7 @@ def runsql(func):
         global db_file
         #print("WRAPPER ARGS:",*w_args)
         # string returned from original 'func' goes here
-        query = func(*w_args,**w_kwargs)
+        query_dict = func(*w_args,**w_kwargs)
         try:
             conn = sqlite3.connect(db_file)
         except sqlite.Error as sqlerr:
@@ -25,13 +25,21 @@ def runsql(func):
         #print("QUERY:",query,type(query))
         # For some reason because we need that function for triggers
         # it has to be here on initialization
-        conn.create_function("get_metadata",3,get_metadata)
-        c.execute(query[0],*w_args)
+        if query_dict['func']:
+            conn.create_function(*query_dict['func'])
+        c.execute(query_dict['query'],*w_args)
         c.fetchall()
         return conn.commit()
     return wrapper
 
-    
+@runsql
+def vacuum():
+    print("::DEBUG vacuum")
+    return { 'query': """ DELETE FROM file WHERE file_exists(file.f_path) = 0 """,
+	     'args': None,
+	     'func':  tuple([ "file_exists", 1 , lambda x: 1 if os.path.exists(x) else 0 ])
+    }
+        
 
 def init_db():
     global db_file
@@ -64,8 +72,11 @@ def updatedb():
 def load_db():
 
     @runsql
-    def insert_files(value):
-        return ( """ INSERT INTO file VALUES (?,?,?,?,?,?,?)""", value)
+    def insert_files( value ):
+        return { 'query': """ INSERT INTO file VALUES (?,?,?,?,?,?,?)""",
+                 'args': value,
+                 'func':  tuple([ "get_metadata", 3 , get_metadata])
+               }
 
     if not os.path.exists(db_file):
         init_db()
