@@ -1,5 +1,6 @@
 # -*- UTF-8 -*-
-import sqlite3, os,sys
+import sqlite3,os,sys
+import re
 from time import time
 from hashlib import md5
 from metadata import *
@@ -26,10 +27,12 @@ def runsql(func):
         # For some reason because we need that function for triggers
         # it has to be here on initialization
         if query_dict['func']:
+            sqlite3.enable_callback_tracebacks(True)
             conn.create_function(*query_dict['func'])
-        c.execute(query_dict['query'],*w_args)
-        c.fetchall()
-        return conn.commit()
+        # print(query_dict['query'],"\nW_ARGS:",*w_args,len(w_args)) 
+        c.execute(query_dict['query'],query_dict['args'])
+        return c.fetchall()
+        # return conn.commit()
     return wrapper
 
 @runsql
@@ -83,6 +86,35 @@ def load_db():
 
     for i in walk_home_tree():
         insert_files(i)
+
+def regexp(y,x):
+    return True if re.search(y,x)  else False
+
+
+def find_file(pattern):
+
+    @runsql
+    def get_file_and_subtype(pattern):
+        return { 'query': """ SELECT f_path,ftype_major FROM file 
+                              WHERE f_path REGEXP ? """,
+                 'args': (pattern, ),
+                 'func': tuple(["REGEXP",2,regexp])
+               }    
+
+    @runsql
+    def query_full_info(fpath,table):
+        return { 'query': """ SELECT * FROM file 
+                              JOIN {0} ON file.f_path = {0}.f_path 
+                              AND file.f_path = ?""".format(table),
+                 'args': (fpath, ),
+                 'func': None
+               }
+
+    matched_files = get_file_and_subtype(pattern)
+    if matched_files:
+        for i in matched_files:
+            print(query_full_info(*i))
+            
         
 
 #    # keep it simple, no need to worry about complex db file name

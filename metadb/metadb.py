@@ -9,7 +9,7 @@ def parse_cmd_args():
     desc = """Database for files in user's home directory
               Authors: Sergiy Kolodyazhnyy, Liu Tian
            """
-    argp = argparse.ArgumentParser(desc)
+    argp = argparse.ArgumentParser(description=desc)
 
 #    argp.add_argument(
 #        "-d","--dump",
@@ -50,6 +50,13 @@ def parse_cmd_args():
         action='store_true'
     )
 
+
+    argp.add_argument(
+        "-f","--file",
+        type=str,
+        help='Prints full information for a particular filename'
+    )
+
     return argp.parse_args()
 
 
@@ -65,6 +72,9 @@ def main():
 
     if args.update:
        updatedb()
+
+    if args.file:
+       find_file(args.file)
 
 
 #    if args.type:
