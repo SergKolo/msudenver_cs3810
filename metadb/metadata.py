@@ -1,9 +1,13 @@
 import os,sys,json,subprocess
+import audioread 
 from hashlib import sha256
 from gi.repository import Gio,GLib
 from PIL import Image,ExifTags
-from audioread import audio_open
 
+""" This module serves to obtain file-specific information and
+    primarily intended for working with files, rather than database
+    itself. It can be considered a bridge between database and the
+    filesystem """
 
 def get_content_type(fpath):
     """ Determines major/minor type of file and default application
@@ -36,6 +40,16 @@ def get_metadata(fpath,ftype_major,ftype_minor):
                             'words':parts[1],
                             'bytes':parts[2] })
 
+    def get_audio_meta(fpath):
+        try:
+            with audioread.audio_open(fpath) as fd:
+                 return json.dumps({ 'channel': fd.channels,
+                          'samplerate': fd.samplerate,
+                          'duration': fd.duration })
+        except:
+            return None
+
+
     def get_exif(fpath):
         try:
             img = Image.open(fpath)
@@ -55,51 +69,20 @@ def get_metadata(fpath,ftype_major,ftype_minor):
                     exif_dict[tag] = value
                 return json.dumps(exif_dict)
 
-#                return json.dumps({
-#                       str(ExifTags.TAGS[k]): str(v) for k,v in img.items()
-##                       if v is not bytes})
-#            else:
-#                return json.dumps({'noexifdata': 'noexifdata'})
         except Exception as e:
             print(fpath,ftype_minor,e)
 
     if ftype_major == 'text':
-       # print("fpath:",fpath,"type:",ftype_minor)
        return get_text_meta(fpath) 
     if ftype_major == 'image' and ftype_minor == 'jpeg':
        return get_exif(fpath)
+    if ftype_major == 'audio':
+       return get_audio_meta(fpath)
     else:
         return "{ 'NOT IMPLEMENTED': 'NOT IMPLEMENTED' }"
 
-    # https://lazka.github.io/pgi-docs/Gio-2.0/enums.html#Gio.FileType.MOUNTABLE
-    # f = Gio.File.new_for_path(f_path)
-    # info = f.query_info('standard::content-type',0,None)
-    # return info.get_attribute_as_string('standard::content-type')
-    # return f.query_file_type(0,None)
-    # return Gio.content_type_guess(f,None)
-
-#	    pass
-#
-#
-#	def get_image_metadata(files):
-#	    """generator for tuple image of resolution"""
-#	    for i in files:
-#		with Image.open(i) as img:
-#		     yield img.size
-#
-#	def get_audio_metadata(files):
-#	    """generator for audio channel,sample rate, and duration in sec"""
-#	    for i in files:
-#		try:
-#		    with audio_open(i) as fd:
-#			 yield (fd.channels,fd.samplerate,fd.duration)
-#		except audioread.NoBackendError as aderr:
-#		       print(aderr.__cause__,aderr.__context__,aderr.__dict__)
-
-    
-
 def get_user_dirs(*args):
-    """ Returns the standard XDG directories """
+    """ Returns the standard XDG directories for traversal """
     user_dirs = []
     for index,val in GLib.UserDirectory.__enum_values__.items():
         if index == 8: continue

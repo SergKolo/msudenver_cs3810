@@ -3,46 +3,17 @@ import os,argparse
 from sql import *
 
 def parse_cmd_args():
-
-    # TODO: https://stackoverflow.com/a/11155124/3701431
-    # TODO: how do we handle --metadata arg ?
-    desc = """Database for files in user's home directory
-              Authors: Sergiy Kolodyazhnyy, Liu Tian
-           """
-    argp = argparse.ArgumentParser(description=desc)
-
-#    argp.add_argument(
-#        "-d","--dump",
-#        action='store_true'
-#    )
-#
-#    argp.add_argument(
-#        "-e","--exists",
-#        action='store_true'
-#    )
-#    argp.add_argument(
-#         "-i","--init",
-#         action='store_true'
-#    )
-#    argp.add_argument(
-#        "-t","--type",
-#        action='store',
-#        type=str
-#    )
-#    argp.add_argument(
-#        "-m","--metadata",
-#        action='store',
-#        type=str
-#    )
+    ''' command line argument parser based on argparse module '''
+    desc = '\n'.join(["Database for tracking file metadata information",
+                      "Authors: Sergiy Kolodyazhnyy, Liu Tian, Jericha Bradley",
+                      "Written for CS 3810, Fall 2018"
+           ])
+    argp = argparse.ArgumentParser(description=desc,formatter_class=argparse.RawTextHelpFormatter)
 
     argp.add_argument(
         "-l","--load",
-        action='store_true'
-    )
-
-    argp.add_argument(
-        "-u","--update",
-        action='store_true'
+        action='store_true',
+        help=': Traverse XDG directories and imports metadata for each file'
     )
 
     argp.add_argument(
@@ -50,51 +21,30 @@ def parse_cmd_args():
         action='store_true'
     )
 
-
     argp.add_argument(
         "-f","--file",
         type=str,
-        help='Prints full information for a particular filename'
+        help=': Prints full information for a particular filename'
     )
 
     return argp.parse_args()
 
 
 def main():
-
+    ''' Program entry point '''
     args = parse_cmd_args()
 
     if args.load:
         load_db()
+        sys.exit(0)
 
     if args.vacuum:
        vacuum()
-
-    if args.update:
-       updatedb()
+       sys.exit(0)
 
     if args.file:
        find_file(args.file)
 
-
-#    if args.type:
-#        print('>>> ARGS.TYPE',args.type)
-#        
-#        @runsql
-#        def get_types(type):
-#            return  ( """ SELECT * 
-#                          FROM files 
-#                          WHERE gio_filetype LIKE ? """, "/".join([type,"%"]))
-#
-#        for i in get_types(args.type):
-#            print("Path:{0}\nSHA256:{1}\nType:{2}\n".format(*i))
-
-    
-#    query = """SELECT * 
-#               FROM files 
-#               WHERE gio_filetype LIKE 'application/%'"""
-#    result = simple_query(config_dir,query)
-#    print(result)
 
 if __name__ == '__main__':
     main()
